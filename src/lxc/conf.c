@@ -1407,12 +1407,17 @@ static int lxc_setup_devpts(struct lxc_conf *conf)
 	/* mount new devpts instance */
 	ret = mount("devpts", "/dev/pts", "devpts", MS_NOSUID | MS_NOEXEC, devpts_mntopts);
 	if (ret < 0) {
-		/* try mounting without gid=5 */
-		ret = mount("devpts", "/dev/pts", "devpts",
-			    MS_NOSUID | MS_NOEXEC, devpts_mntopts + sizeof("gid=5"));
+		/* try mounting without options */
+		ret = mount("devpts", "/dev/pts", "devpts", 0, devpts_mntopts);
+
 		if (ret < 0) {
-			SYSERROR("Failed to mount new devpts instance");
-			return -1;
+			/* try mounting without gid=5 */
+			ret = mount("devpts", "/dev/pts", "devpts",
+					MS_NOSUID | MS_NOEXEC, devpts_mntopts + sizeof("gid=5"));
+			if (ret < 0) {
+				SYSERROR("Failed to mount new devpts instance");
+				return -1;
+			}
 		}
 	}
 	DEBUG("mount new devpts instance with options \"%s\"", devpts_mntopts);
